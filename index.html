@@ -1,0 +1,431 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Bubble Physics Simulation</title>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 2rem;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(90deg, #00dbde 0%, #fc00ff 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .controls-panel {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1.5rem;
+            z-index: 10;
+            width: 90%;
+            max-width: 800px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            pointer-events: all;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 1rem;
+        }
+
+        label {
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            -webkit-appearance: none;
+            background: linear-gradient(90deg, #00dbde 0%, #fc00ff 100%);
+            border-radius: 4px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #fff;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn {
+            background: linear-gradient(90deg, #00dbde 0%, #fc00ff 100%);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 219, 222, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 219, 222, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .value-display {
+            text-align: right;
+            font-size: 0.8rem;
+            color: #00dbde;
+            margin-top: 0.2rem;
+        }
+
+        @media (max-width: 768px) {
+            .controls-panel {
+                padding: 1rem;
+                bottom: 10px;
+            }
+            
+            .control-group {
+                margin-bottom: 0.8rem;
+            }
+            
+            .buttons {
+                flex-direction: column;
+            }
+            
+            .btn {
+                padding: 0.6rem 1rem;
+            }
+        }
+
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            padding: 0.5rem;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.5);
+            z-index: 5;
+        }
+    </style>
+
+<base target="_self">
+
+
+    </head><body><div id="canvas-container"></div>
+    
+    <div class="hero-content">
+        <h1>Bubble Physics</h1>
+        <p>Interactive bubble simulation with customizable physics parameters. Adjust the controls below to change the behavior of the bubbles.</p>
+    </div>
+    
+    <div class="controls-panel">
+        <div class="control-group">
+            <label for="bubble-rate">Bubble Generation Rate</label>
+            <input type="range" id="bubble-rate" min="1" max="20" value="5">
+            <div class="value-display" id="bubble-rate-value">5 bubbles/sec</div>
+        </div>
+        
+        <div class="control-group">
+            <label for="buoyancy">Buoyancy</label>
+            <input type="range" id="buoyancy" min="0.1" max="2" step="0.1" value="0.5">
+            <div class="value-display" id="buoyancy-value">0.5</div>
+        </div>
+        
+        <div class="control-group">
+            <label for="transparency">Bubble Transparency</label>
+            <input type="range" id="transparency" min="0.1" max="1" step="0.1" value="0.7">
+            <div class="value-display" id="transparency-value">0.7</div>
+        </div>
+        
+        <div class="control-group">
+            <label for="size-range">Size Range</label>
+            <input type="range" id="size-range" min="10" max="100" value="50">
+            <div class="value-display" id="size-range-value">50px</div>
+        </div>
+        
+        <div class="buttons">
+            <button id="reset-btn" class="btn">Reset Simulation</button>
+            <button id="collision-btn" class="btn">Collisions: On</button>
+        </div>
+    </div>
+    
+    <footer>
+        © 2025 Interactive Bubble Physics Simulation
+    </footer>
+
+    <script>
+        // Three.js initialization
+        let scene, camera, renderer, bubbles = [];
+        let bubbleRate = 5;
+        let buoyancy = 0.5;
+        let transparency = 0.7;
+        let sizeRange = 50;
+        let collisionsEnabled = true;
+        let lastBubbleTime = 0;
+        
+        // DOM elements
+        const bubbleRateSlider = document.getElementById('bubble-rate');
+        const buoyancySlider = document.getElementById('buoyancy');
+        const transparencySlider = document.getElementById('transparency');
+        const sizeRangeSlider = document.getElementById('size-range');
+        const resetBtn = document.getElementById('reset-btn');
+        const collisionBtn = document.getElementById('collision-btn');
+        const bubbleRateValue = document.getElementById('bubble-rate-value');
+        const buoyancyValue = document.getElementById('buoyancy-value');
+        const transparencyValue = document.getElementById('transparency-value');
+        const sizeRangeValue = document.getElementById('size-range-value');
+        
+        // Initialize Three.js scene
+        function init() {
+            // Create scene
+            scene = new THREE.Scene();
+            
+            // Create camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 30;
+            
+            // Create renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x000000, 0);
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+            
+            // Add event listeners
+            window.addEventListener('resize', onWindowResize);
+            bubbleRateSlider.addEventListener('input', updateBubbleRate);
+            buoyancySlider.addEventListener('input', updateBuoyancy);
+            transparencySlider.addEventListener('input', updateTransparency);
+            sizeRangeSlider.addEventListener('input', updateSizeRange);
+            resetBtn.addEventListener('click', resetSimulation);
+            collisionBtn.addEventListener('click', toggleCollisions);
+            
+            // Start animation loop
+            animate();
+        }
+        
+        // Create a new bubble
+        function createBubble() {
+            const size = Math.random() * sizeRange + 10;
+            const geometry = new THREE.SphereGeometry(size / 100, 32, 32);
+            
+            // Create material with random color and transparency
+            const hue = Math.random();
+            const color = new THREE.Color().setHSL(hue, 0.8, 0.7);
+            const material = new THREE.MeshPhongMaterial({
+                color: color,
+                transparent: true,
+                opacity: transparency,
+                shininess: 100,
+                specular: 0xffffff
+            });
+            
+            const bubble = new THREE.Mesh(geometry, material);
+            
+            // Random position at bottom of screen
+            bubble.position.x = (Math.random() - 0.5) * 40;
+            bubble.position.y = -20;
+            bubble.position.z = (Math.random() - 0.5) * 20;
+            
+            // Random velocity
+            bubble.userData = {
+                velocity: new THREE.Vector3(
+                    (Math.random() - 0.5) * 0.2,
+                    Math.random() * 0.1 + 0.1,
+                    (Math.random() - 0.5) * 0.2
+                ),
+                size: size
+            };
+            
+            scene.add(bubble);
+            bubbles.push(bubble);
+        }
+        
+        // Update bubble positions and physics
+        function updateBubbles() {
+            const now = Date.now();
+            
+            // Create new bubbles based on rate
+            if (now - lastBubbleTime > 1000 / bubbleRate) {
+                createBubble();
+                lastBubbleTime = now;
+            }
+            
+            // Update each bubble
+            for (let i = 0; i < bubbles.length; i++) {
+                const bubble = bubbles[i];
+                
+                // Apply buoyancy
+                bubble.userData.velocity.y += buoyancy * 0.01;
+                
+                // Update position
+                bubble.position.x += bubble.userData.velocity.x;
+                bubble.position.y += bubble.userData.velocity.y;
+                bubble.position.z += bubble.userData.velocity.z;
+                
+                // Apply some drag
+                bubble.userData.velocity.multiplyScalar(0.99);
+                
+                // Check for collisions
+                if (collisionsEnabled) {
+                    for (let j = i + 1; j < bubbles.length; j++) {
+                        const otherBubble = bubbles[j];
+                        const distance = bubble.position.distanceTo(otherBubble.position);
+                        const minDistance = (bubble.userData.size + otherBubble.userData.size) / 100;
+                        
+                        if (distance < minDistance) {
+                            // Simple collision response
+                            const direction = new THREE.Vector3().subVectors(bubble.position, otherBubble.position).normalize();
+                            const force = 0.05;
+                            
+                            bubble.userData.velocity.add(direction.clone().multiplyScalar(force));
+                            otherBubble.userData.velocity.add(direction.clone().multiplyScalar(-force));
+                        }
+                    }
+                }
+                
+                // Remove bubbles that go off screen
+                if (bubble.position.y > 25) {
+                    scene.remove(bubble);
+                    bubbles.splice(i, 1);
+                    i--;
+                }
+            }
+        }
+        
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            updateBubbles();
+            renderer.render(scene, camera);
+        }
+        
+        // Handle window resize
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        // Control updates
+        function updateBubbleRate() {
+            bubbleRate = parseInt(this.value);
+            bubbleRateValue.textContent = `${bubbleRate} bubbles/sec`;
+        }
+        
+        function updateBuoyancy() {
+            buoyancy = parseFloat(this.value);
+            buoyancyValue.textContent = buoyancy.toFixed(1);
+        }
+        
+        function updateTransparency() {
+            transparency = parseFloat(this.value);
+            transparencyValue.textContent = transparency.toFixed(1);
+            
+            // Update all existing bubbles
+            bubbles.forEach(bubble => {
+                bubble.material.opacity = transparency;
+            });
+        }
+        
+        function updateSizeRange() {
+            sizeRange = parseInt(this.value);
+            sizeRangeValue.textContent = `${sizeRange}px`;
+        }
+        
+        function resetSimulation() {
+            // Remove all bubbles
+            bubbles.forEach(bubble => {
+                scene.remove(bubble);
+            });
+            bubbles = [];
+        }
+        
+        function toggleCollisions() {
+            collisionsEnabled = !collisionsEnabled;
+            collisionBtn.textContent = `Collisions: ${collisionsEnabled ? 'On' : 'Off'}`;
+        }
+        
+        // Add lights
+        function addLights() {
+            const ambientLight = new THREE.AmbientLight(0x404040);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+            directionalLight.position.set(1, 1, 1);
+            scene.add(directionalLight);
+            
+            const pointLight = new THREE.PointLight(0xffffff, 1, 100);
+            pointLight.position.set(0, 10, 10);
+            scene.add(pointLight);
+        }
+        
+        // Initialize everything
+        init();
+        addLights();
+    </script>
+
+              
+          
+                
+          
+              
+</body></html>
